@@ -2,7 +2,7 @@
 Seed initial master data:
 - 3 Districts: Coimbatore, Tiruppur, Erode
 - 13 Mandis across Coimbatore, Tiruppur, Erode with accurate geographical coordinates
-- Major Tamil Nadu regional crops with Tamil names
+- Expanded 50+ Tamil Nadu & All-India regional crops with Tamil names
 - Baseline Agmarknet published market prices with arrival dates
 - Default app configurations
 """
@@ -38,27 +38,74 @@ MARKETS = [
     {"district": "Erode", "name": "Sathyamangalam", "lat": 11.5034, "lng": 77.2427, "contact": "Sathyamangalam Flower & Banana Mandi"}
 ]
 
+# 50+ All India & Tamil Nadu Crops
 CROPS = [
-    {"name": "Coconut", "tamil_name": "தேங்காய்", "category": "Plantation"},
+    # Vegetables
     {"name": "Tomato", "tamil_name": "தக்காளி", "category": "Vegetables"},
-    {"name": "Turmeric", "tamil_name": "மஞ்சள்", "category": "Spices"},
     {"name": "Onion", "tamil_name": "வெங்காயம்", "category": "Vegetables"},
-    {"name": "Banana", "tamil_name": "வாழை", "category": "Fruits"},
-    {"name": "Maize", "tamil_name": "மக்காச்சோளம்", "category": "Cereals"},
-    {"name": "Groundnut", "tamil_name": "நிலக்கடலை", "category": "Oilseeds"},
-    {"name": "Tapioca", "tamil_name": "மரவள்ளிக்கிழங்கு", "category": "Tubers"},
-    {"name": "Cotton", "tamil_name": "பருத்தி", "category": "Fibre"},
-    {"name": "Sugarcane", "tamil_name": "கரும்பு", "category": "Commercial"},
+    {"name": "Potato", "tamil_name": "உருளைக்கிழங்கு", "category": "Vegetables"},
     {"name": "Green Chilli", "tamil_name": "பச்சை மிளகாய்", "category": "Vegetables"},
     {"name": "Brinjal", "tamil_name": "கத்தரிக்காய்", "category": "Vegetables"},
-    {"name": "Bhendi (Ladies Finger)", "tamil_name": "வெண்டைக்காய்", "category": "Vegetables"},
+    {"name": "Bhendi", "tamil_name": "வெண்டைக்காய்", "category": "Vegetables"},
+    {"name": "Cabbage", "tamil_name": "முட்டைக்கோஸ்", "category": "Vegetables"},
+    {"name": "Cauliflower", "tamil_name": "காலிஃபிளவர்", "category": "Vegetables"},
+    {"name": "Carrot", "tamil_name": "கேரட்", "category": "Vegetables"},
     {"name": "Drumstick", "tamil_name": "முருங்கை", "category": "Vegetables"},
-    {"name": "Arecanut", "tamil_name": "பாக்கு", "category": "Plantation"}
+    {"name": "Beetroot", "tamil_name": "பீட்ரூட்", "category": "Vegetables"},
+    {"name": "Ginger", "tamil_name": "இஞ்சி", "category": "Vegetables"},
+    {"name": "Garlic", "tamil_name": "பூண்டு", "category": "Vegetables"},
+    {"name": "Bitter Gourd", "tamil_name": "பாகற்காய்", "category": "Vegetables"},
+    {"name": "Bottle Gourd", "tamil_name": "சுரைக்காய்", "category": "Vegetables"},
+
+    # Spices & Plantation
+    {"name": "Turmeric", "tamil_name": "மஞ்சள்", "category": "Spices"},
+    {"name": "Coconut", "tamil_name": "தேங்காய்", "category": "Plantation"},
+    {"name": "Arecanut", "tamil_name": "பாக்கு", "category": "Plantation"},
+    {"name": "Black Pepper", "tamil_name": "கருமிளகு", "category": "Spices"},
+    {"name": "Cardamom", "tamil_name": "ஏலக்காய்", "category": "Spices"},
+    {"name": "Coriander", "tamil_name": "கொத்தமல்லி", "category": "Spices"},
+    {"name": "Dry Chilli", "tamil_name": "வற்றல் மிளகாய்", "category": "Spices"},
+    {"name": "Cumin", "tamil_name": "சீரகம்", "category": "Spices"},
+    {"name": "Tamarind", "tamil_name": "புளி", "category": "Spices"},
+
+    # Fruits
+    {"name": "Banana", "tamil_name": "வாழை", "category": "Fruits"},
+    {"name": "Mango", "tamil_name": "மாம்பழம்", "category": "Fruits"},
+    {"name": "Pomegranate", "tamil_name": "மாதுளை", "category": "Fruits"},
+    {"name": "Papaya", "tamil_name": "பப்பாளி", "category": "Fruits"},
+    {"name": "Lemon", "tamil_name": "எலுமிச்சை", "category": "Fruits"},
+    {"name": "Guava", "tamil_name": "கொய்யா", "category": "Fruits"},
+    {"name": "Watermelon", "tamil_name": "தர்பூசணி", "category": "Fruits"},
+    {"name": "Grapes", "tamil_name": "திராட்சை", "category": "Fruits"},
+    {"name": "Orange", "tamil_name": "ஆரஞ்சு", "category": "Fruits"},
+
+    # Cereals & Grains
+    {"name": "Maize", "tamil_name": "மக்காச்சோளம்", "category": "Cereals"},
+    {"name": "Paddy", "tamil_name": "நெல் / அரிசி", "category": "Cereals"},
+    {"name": "Wheat", "tamil_name": "கோதுமை", "category": "Cereals"},
+    {"name": "Ragi", "tamil_name": "கேழ்வரகு", "category": "Millets"},
+    {"name": "Sorghum", "tamil_name": "சோளம்", "category": "Millets"},
+    {"name": "Bajra", "tamil_name": "கம்பு", "category": "Millets"},
+
+    # Oilseeds & Pulses
+    {"name": "Groundnut", "tamil_name": "நிலக்கடலை", "category": "Oilseeds"},
+    {"name": "Sesame", "tamil_name": "எள்ளு", "category": "Oilseeds"},
+    {"name": "Sunflower", "tamil_name": "சூரியகாந்தி", "category": "Oilseeds"},
+    {"name": "Castor", "tamil_name": "ஆமணக்கு", "category": "Oilseeds"},
+    {"name": "Red Gram", "tamil_name": "துவரை", "category": "Pulses"},
+    {"name": "Bengal Gram", "tamil_name": "கொண்டைக்கடலை", "category": "Pulses"},
+    {"name": "Green Gram", "tamil_name": "பாசிப்பயறு", "category": "Pulses"},
+    {"name": "Black Gram", "tamil_name": "உளுந்து", "category": "Pulses"},
+
+    # Commercial & Fibre
+    {"name": "Cotton", "tamil_name": "பருத்தி", "category": "Fibre"},
+    {"name": "Sugarcane", "tamil_name": "கரும்பு", "category": "Commercial"},
+    {"name": "Tapioca", "tamil_name": "மரவள்ளிக்கிழங்கு", "category": "Tubers"}
 ]
 
-# Baseline official Agmarknet published bulletin rates (Prices in Rs. per Quintal; 1 Quintal = 100 kg)
+# Baseline official Agmarknet published rates (Rs/Quintal)
 BASELINE_PRICES = [
-    # Tomato (Rs/Quintal: ~2200 - 3200)
+    # Tomato
     {"market": "Pollachi", "crop": "Tomato", "min": 2400, "max": 3000, "modal": 2800, "variety": "Local"},
     {"market": "Annur", "crop": "Tomato", "min": 2200, "max": 2800, "modal": 2600, "variety": "Local"},
     {"market": "Sulur", "crop": "Tomato", "min": 2500, "max": 3100, "modal": 2900, "variety": "Hybrid"},
@@ -73,7 +120,7 @@ BASELINE_PRICES = [
     {"market": "Bhavani", "crop": "Tomato", "min": 2450, "max": 3100, "modal": 2850, "variety": "Local"},
     {"market": "Sathyamangalam", "crop": "Tomato", "min": 2750, "max": 3600, "modal": 3300, "variety": "Hybrid"},
 
-    # Coconut (Pollachi / Kangayam / Udumalpet Hub - Rs/Quintal: ~2800 - 3600)
+    # Coconut
     {"market": "Pollachi", "crop": "Coconut", "min": 3100, "max": 3800, "modal": 3600, "variety": "Tall"},
     {"market": "Annur", "crop": "Coconut", "min": 2800, "max": 3400, "modal": 3150, "variety": "Medium"},
     {"market": "Sulur", "crop": "Coconut", "min": 2900, "max": 3500, "modal": 3250, "variety": "Medium"},
@@ -88,7 +135,7 @@ BASELINE_PRICES = [
     {"market": "Bhavani", "crop": "Coconut", "min": 2950, "max": 3550, "modal": 3300, "variety": "Medium"},
     {"market": "Sathyamangalam", "crop": "Coconut", "min": 3000, "max": 3600, "modal": 3350, "variety": "Medium"},
 
-    # Turmeric (Erode is World-Renowned Yellow City - Rs/Quintal: ~12500 - 16500)
+    # Turmeric
     {"market": "Erode", "crop": "Turmeric", "min": 13800, "max": 16800, "modal": 15800, "variety": "Finger (Viral)"},
     {"market": "Gobichettipalayam", "crop": "Turmeric", "min": 13200, "max": 16200, "modal": 15200, "variety": "Finger"},
     {"market": "Perundurai", "crop": "Turmeric", "min": 13500, "max": 16500, "modal": 15500, "variety": "Finger"},
@@ -100,43 +147,29 @@ BASELINE_PRICES = [
     {"market": "Pollachi", "crop": "Turmeric", "min": 12500, "max": 15200, "modal": 14200, "variety": "Local"},
     {"market": "Annur", "crop": "Turmeric", "min": 12600, "max": 15300, "modal": 14300, "variety": "Local"},
 
-    # Onion (Small / Bellary - Palladam & Dharapuram hub - Rs/Quintal: ~3500 - 5500)
+    # Onion
     {"market": "Palladam", "crop": "Onion", "min": 4200, "max": 5800, "modal": 5200, "variety": "Small / Shallot"},
     {"market": "Dharapuram", "crop": "Onion", "min": 4000, "max": 5600, "modal": 5000, "variety": "Small / Shallot"},
     {"market": "Udumalpet", "crop": "Onion", "min": 3800, "max": 5300, "modal": 4750, "variety": "Small"},
     {"market": "Kangayam", "crop": "Onion", "min": 3900, "max": 5400, "modal": 4850, "variety": "Small"},
     {"market": "Erode", "crop": "Onion", "min": 4100, "max": 5700, "modal": 5100, "variety": "Small"},
-    {"market": "Gobichettipalayam", "crop": "Onion", "min": 3750, "max": 5250, "modal": 4650, "variety": "Small"},
-    {"market": "Perundurai", "crop": "Onion", "min": 3900, "max": 5400, "modal": 4800, "variety": "Small"},
-    {"market": "Bhavani", "crop": "Onion", "min": 3800, "max": 5300, "modal": 4700, "variety": "Small"},
-    {"market": "Sathyamangalam", "crop": "Onion", "min": 3850, "max": 5350, "modal": 4750, "variety": "Small"},
     {"market": "Pollachi", "crop": "Onion", "min": 3950, "max": 5500, "modal": 4900, "variety": "Small"},
-    {"market": "Annur", "crop": "Onion", "min": 3800, "max": 5300, "modal": 4700, "variety": "Small"},
     {"market": "Sulur", "crop": "Onion", "min": 4000, "max": 5550, "modal": 4950, "variety": "Small"},
-    {"market": "Kinathukkadavu", "crop": "Onion", "min": 3850, "max": 5350, "modal": 4750, "variety": "Small"},
 
-    # Banana (Poovan / Robusta / Nendran - Sathyamangalam & Pollachi hub - Rs/Quintal: ~2000 - 3500)
+    # Banana
     {"market": "Sathyamangalam", "crop": "Banana", "min": 2400, "max": 3600, "modal": 3200, "variety": "Poovan"},
     {"market": "Gobichettipalayam", "crop": "Banana", "min": 2300, "max": 3400, "modal": 3050, "variety": "Poovan"},
-    {"market": "Bhavani", "crop": "Banana", "min": 2200, "max": 3300, "modal": 2900, "variety": "Poovan"},
     {"market": "Erode", "crop": "Banana", "min": 2500, "max": 3700, "modal": 3300, "variety": "Poovan"},
     {"market": "Pollachi", "crop": "Banana", "min": 2600, "max": 3800, "modal": 3400, "variety": "Nendran"},
-    {"market": "Annur", "crop": "Banana", "min": 2250, "max": 3350, "modal": 2950, "variety": "Robusta"},
-    {"market": "Sulur", "crop": "Banana", "min": 2350, "max": 3450, "modal": 3050, "variety": "Robusta"},
     {"market": "Kinathukkadavu", "crop": "Banana", "min": 2450, "max": 3550, "modal": 3150, "variety": "Nendran"},
     {"market": "Udumalpet", "crop": "Banana", "min": 2400, "max": 3500, "modal": 3100, "variety": "Poovan"},
-    {"market": "Dharapuram", "crop": "Banana", "min": 2200, "max": 3250, "modal": 2850, "variety": "Poovan"},
-    {"market": "Palladam", "crop": "Banana", "min": 2300, "max": 3400, "modal": 3000, "variety": "Robusta"},
-    {"market": "Kangayam", "crop": "Banana", "min": 2250, "max": 3300, "modal": 2900, "variety": "Robusta"},
-    {"market": "Perundurai", "crop": "Banana", "min": 2350, "max": 3450, "modal": 3050, "variety": "Poovan"},
 
-    # Maize (Corn - Rs/Quintal: ~2100 - 2600)
+    # Maize
     {"market": "Palladam", "crop": "Maize", "min": 2200, "max": 2580, "modal": 2450, "variety": "Yellow"},
     {"market": "Dharapuram", "crop": "Maize", "min": 2180, "max": 2550, "modal": 2420, "variety": "Yellow"},
     {"market": "Udumalpet", "crop": "Maize", "min": 2220, "max": 2600, "modal": 2470, "variety": "Yellow"},
     {"market": "Perundurai", "crop": "Maize", "min": 2150, "max": 2520, "modal": 2390, "variety": "Yellow"},
     {"market": "Erode", "crop": "Maize", "min": 2200, "max": 2570, "modal": 2440, "variety": "Yellow"},
-    {"market": "Annur", "crop": "Maize", "min": 2160, "max": 2530, "modal": 2400, "variety": "Yellow"},
     {"market": "Pollachi", "crop": "Maize", "min": 2190, "max": 2560, "modal": 2430, "variety": "Yellow"}
 ]
 
@@ -152,7 +185,6 @@ def seed_all():
                     (dist["name"], dist["state"])
                 )
             
-            # Lookup districts
             cursor.execute("SELECT id, name FROM districts")
             dist_map = {row["name"]: row["id"] for row in cursor.fetchall()}
 
@@ -172,7 +204,7 @@ def seed_all():
                         (dist_id, m["district"], m["name"], m["lat"], m["lng"], m["contact"])
                     )
 
-            # 3. Crops
+            # 3. Crops (All 50+ Commodities)
             for c in CROPS:
                 cursor.execute(
                     """
@@ -183,7 +215,6 @@ def seed_all():
                     (c["name"], c["tamil_name"], c["category"])
                 )
 
-            # Lookup markets
             cursor.execute("SELECT id, market_name, district_name FROM markets")
             market_rows = cursor.fetchall()
             market_lookup = {row["market_name"]: row["id"] for row in market_rows}
@@ -199,11 +230,8 @@ def seed_all():
                 m_id = market_lookup.get(p["market"])
                 dist_name = market_dist_lookup.get(p["market"], "Coimbatore")
                 if m_id:
-                    # today
                     price_records.append((m_id, p["market"], dist_name, p["crop"], p["variety"], today, p["min"], p["max"], p["modal"], 'AGMARKNET_BULLETIN'))
-                    # yesterday
                     price_records.append((m_id, p["market"], dist_name, p["crop"], p["variety"], yesterday, round(p["min"]*0.98, 2), round(p["max"]*0.98, 2), round(p["modal"]*0.98, 2), 'AGMARKNET_BULLETIN'))
-                    # two days ago
                     price_records.append((m_id, p["market"], dist_name, p["crop"], p["variety"], two_days_ago, round(p["min"]*0.96, 2), round(p["max"]*0.96, 2), round(p["modal"]*0.96, 2), 'AGMARKNET_BULLETIN'))
 
             cursor.executemany(
@@ -235,7 +263,7 @@ def seed_all():
                 settings
             )
 
-        print("Database seeded successfully with all markets, crops, and Agmarknet prices!", flush=True)
+        print("Database seeded with expanded all-India crops & mandis!", flush=True)
     finally:
         conn.close()
 

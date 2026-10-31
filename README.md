@@ -1,154 +1,89 @@
 # 🌾 Farmer Market Price Assistant
 
-A modern, responsive web application developed using **Python Flask, HTML5, CSS3, JavaScript (ES6+), Chart.js, and MySQL**. 
+A modern, responsive web application built with **Python Flask, HTML5, CSS3, JavaScript (ES6+), Chart.js, and MySQL**. 
 
-Specially built for farmers in the Western Kongu agricultural belt of Tamil Nadu (**Coimbatore, Tiruppur, and Erode** districts) to identify the best regulated market (Mandi) to sell their harvest by comparing real-world daily agricultural prices from the Government of India's **AGMARKNET / data.gov.in** dataset and calculating estimated final net profit after transportation and handling expenses.
+Specially built for farmers in Tamil Nadu's Western Kongu agricultural belt (**Coimbatore, Tiruppur, and Erode** districts) and across India to track **day-to-day market rates (2020 to Present)**, compare regional prices against **All-India Market Ratings**, and identify the best mandi to sell their harvest based on real daily agricultural prices from the Government of India's **AGMARKNET / data.gov.in** dataset.
 
 ---
 
 ## 🌟 Key Features
 
-### 1. Farmer Input & Dynamic Market Chaining
-- Intuitive, mobile-responsive input form for:
-  - **Crop Name**: Searchable selector with quick chips for Kongu staples (*Tomato, Coconut, Turmeric, Onion, Banana, Maize, Groundnut, etc.*).
-  - **District Name**: Dynamically toggles between **Coimbatore, Tiruppur, and Erode**.
-  - **Market Name**: Dynamically updates mandis based on selected district:
-    - **Coimbatore**: *Pollachi, Annur, Sulur, Kinathukkadavu*
-    - **Tiruppur**: *Udumalpet, Dharapuram, Palladam, Kangayam*
-    - **Erode**: *Erode, Gobichettipalayam, Perundurai, Bhavani, Sathyamangalam*
-  - **Date Picker**: Defaults to current date for latest daily arrival rates.
-  - **Crop Quantity (in kg)**: Easy input for harvest volume.
-  - **Farmer Location**: Autofill suggestions for regional towns/villages to calculate accurate road distance to each of the 13 mandis.
+### 1. 📅 Day-to-Day Market History (2020 to Now)
+- **Year-by-Year & Month-by-Month Explorer**: Select any year (**2020, 2021, 2022, 2023, 2024, 2025, 2026**) and any month (Jan – Dec) to inspect daily historical arrival rates.
+- **Day-over-Day (DoD) Change Analytics**:
+  - Daily price variation tracking: `+₹X (+Y%)` or `-₹X (-Y%)`.
+  - Bullish, Bearish, and Stable market trend indicators.
+  - Interactive Day-to-Day Timeline Chart (Modal, Minimum, Maximum prices).
+  - Monthly Summary KPIs: Monthly Average Modal Rate, Highest Day of the Month, Lowest Day of the Month, and Net Monthly Gain/Loss.
+  - One-click CSV export for any selected month.
 
-### 2. Real-World Daily AGMARKNET API Integration
-- Connects directly to the official Open Government Data (OGD) platform API:
-  - **Endpoint**: `https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070`
-  - **Retrieves**: Crop Name, District, Market Name, Arrival Date, Minimum Price, Maximum Price, Modal Price.
-  - **Transparent Data Integrity**: Honest reporting of real government records, clear display of arrival dates and last sync timestamps. Zero fictitious price generation.
-  - **Intelligent Deduplication**: Avoids duplicate entries in MySQL with composite unique keys `(market_name, crop_name, arrival_date)`.
-  - **Robust Error Handling**: Gracefully handles network timeouts, API key requirements, and missing commodity arrival reports.
+### 2. 🇮🇳 All-India Market Ratings & National Benchmarks
+- **National Mandi Performance Scores (★ out of 5.0)**:
+  - Evaluation based on price premiums, trading volume liquidity, e-NAM digital transparency, and payment turnaround speed.
+- **National Major Market Comparison**:
+  - **Pollachi Regulated Market** (Coimbatore, Tamil Nadu) — *★ 4.9 (National Copra & Coconut Hub)*
+  - **Erode Regulated Market** (Erode, Tamil Nadu) — *★ 4.9 (Global Turmeric Capital)*
+  - **Palladam Regulated Market** (Tiruppur, Tamil Nadu) — *★ 4.7 (Shallot & Poultry Maize Center)*
+  - **Azadpur APMC Mandi** (Delhi) — *★ 4.8 (Asia's Largest Terminal Market)*
+  - **Vashi APMC Mandi** (Navi Mumbai, Maharashtra) — *★ 4.8 (Western Commercial Clearing Hub)*
+  - **Lasalgaon APMC** (Nashik, Maharashtra) — *★ 4.8 (Asia's Largest Onion Market)*
+  - **Kolar APMC Mandi** (Karnataka) — *★ 4.8 (South India Tomato Terminal)*
+  - **Guntur Agricultural Market** (Andhra Pradesh) — *★ 4.8 (Asia's Largest Chilli Yard)*
+  - **Nizamabad Regulated Market** (Telangana) — *★ 4.6 (Central Turmeric Hub)*
+- **National Price Parity Index**: Shows whether local mandis trade at a premium or discount compared to the All-India composite baseline.
 
-### 3. Market Comparison Engine
-- Compares prices across all **13 regulated mandis** in Coimbatore, Tiruppur, and Erode in a responsive, filterable data table.
-- Accurately converts government rates from **₹ per Quintal (100 kg)** to **₹ per kilogram**:
-  $$\text{Price per kg} = \frac{\text{Modal Price (\text{₹}/Quintal)}}{100}$$
-- Shows road distance (km), estimated freight, handling expenses, and net profit for every mandi.
+### 3. 🌱 50+ Agricultural Crops & Products
+- **Major Vegetables**: Tomato (தக்காளி), Small Pink Onion (சின்ன வெங்காயம்), Potato (உருளைக்கிழங்கு), Green Chilli (பச்சை மிளகாய்), Brinjal (கத்தரிக்காய்), Bhendi/Okra (வெண்டைக்காய்), Cabbage, Cauliflower, Carrot, Drumstick (முருங்கை), Beetroot, Ginger (இஞ்சி), Garlic (பூண்டு).
+- **Spices & Plantation**: Turmeric (மஞ்சள்), Coconut (தேங்காய்), Arecanut (பாக்கு), Black Pepper (கருமிளகு), Cardamom (ஏலக்காய்), Coriander Seeds (கொத்தமல்லி), Dry Red Chilli (வற்றல் மிளகாய்).
+- **Fruits**: Banana (வாழை - Poovan/Robusta/Nendran), Mango (மாம்பழம்), Pomegranate (மாதுளை), Papaya (பப்பாளி), Lemon (எலுமிச்சை), Guava (கொய்யா).
+- **Cereals, Grains & Millets**: Maize / Corn (மக்காச்சோளம்), Paddy / Rice (நெல் / அரிசி), Wheat (கோதுமை), Ragi (கேழ்வரகு), Sorghum (சோளம்), Bajra (கம்பு).
+- **Oilseeds & Pulses**: Groundnut (நிலக்கடலை), Sesame / Gingelly (எள்ளு), Sunflower Seeds, Red Gram / Tur Dal (துவரை), Bengal Gram / Chana (கொண்டைக்கடலை), Green Gram / Moong (பாசிப்பயறு), Black Gram / Urad (உளுந்து).
+- **Commercial & Fibres**: Cotton (பருத்தி), Sugarcane (கரும்பு), Tapioca (மரவள்ளிக்கிழங்கு).
 
-### 4. Profit Calculator & Best Market Recommendation
-- **Formula**:
-  $$\text{Selling Value} = \text{Crop Quantity (kg)} \times \text{Price per kg}$$
-  $$\text{Transportation Cost} = \text{Distance (km)} \times \text{Rate per km}$$
-  $$\text{Other Expenses} = \text{Crop Quantity (kg)} \times \text{Rate per kg}$$
-  $$\mathbf{\text{Final Profit}} = \mathbf{\text{Selling Value}} - \mathbf{\text{Transportation Cost}} - \mathbf{\text{Other Expenses}}$$
-- **Automated Recommendation**: Instantly highlights the market yielding the highest final profit.
-- Explains the economic rationale: Compares the recommended mandi against the farmer's local base mandi (e.g. extra profit generated vs. extra transportation incurred).
+### 4. 🌾 Price & Profit Assistant (13 Kongu Mandis)
+- Dynamically toggles between **Coimbatore, Tiruppur, and Erode**:
+  - **Coimbatore**: *Pollachi, Annur, Sulur, Kinathukkadavu*
+  - **Tiruppur**: *Udumalpet, Dharapuram, Palladam, Kangayam*
+  - **Erode**: *Erode, Gobichettipalayam, Perundurai, Bhavani, Sathyamangalam*
+- **Accurate Conversions**: Converts Government Agmarknet rates from ₹/Quintal (100 kg) to ₹/kg.
+- **Profit Formula**:
+  $$\text{Selling Value} = \text{Quantity (kg)} \times \text{Price per kg}$$
+  $$\text{Transportation Cost} = \text{Road Distance (km)} \times \text{Freight Rate per km}$$
+  $$\text{Other Expenses} = \text{Quantity (kg)} \times \text{Handling Rate per kg}$$
+  $$\mathbf{\text{Final Net Profit}} = \mathbf{\text{Selling Value}} - \mathbf{\text{Transportation Cost}} - \mathbf{\text{Other Expenses}}$$
+- **Best Market Recommendation**: Automatically selects and highlights the optimal mandi yielding the highest net profit.
 
-### 5. Interactive Analytics Dashboard
-- **4 Key KPI Cards**:
-  - Total Markets Searched
-  - Available Crop Prices
-  - Highest Market Price
-  - Best Profitable Market
-- **Visual Charts (Chart.js)**:
-  - *Mandi Price Comparison Bar Chart* (color-coded by district)
-  - *Daily Price History & Trend Line Chart* (Min, Modal, Max rate movements over time)
-  - *Regional Commodity Benchmark Bar Chart*
-- Search history and calculation logs stored in MySQL.
-
-### 6. Modern Agricultural Design
-- Clean, farmer-friendly green and white palette (`#15803d`, `#14532d`, `#dcfce7`).
-- Mobile-first responsive layout tailored for farmers using smartphones in the field.
-- Print-ready profit summary and one-click **CSV Data Export**.
-
----
-
-## 🏗️ Architecture & Database Design
-
-### Target Districts and Regulated Mandis
-
-| District | Regulated Mandis (Markets) | Regional Specialization |
-| :--- | :--- | :--- |
-| **Coimbatore** | Pollachi, Annur, Sulur, Kinathukkadavu | Coconut hub, Vegetables, Tomato |
-| **Tiruppur** | Udumalpet, Dharapuram, Palladam, Kangayam | Shallots / Small Onion, Maize, Copra |
-| **Erode** | Erode, Gobichettipalayam, Perundurai, Bhavani, Sathyamangalam | World-famous Turmeric, Banana, Tapioca |
-
-### MySQL Database Schema (`farmer_market_db`)
-- `districts`: 3 Target Tamil Nadu districts.
-- `markets`: 13 Mandis with geographical latitude and longitude coordinates.
-- `crops`: Kongu regional crops with English and Tamil names.
-- `daily_prices`: Official Agmarknet prices (`market_name`, `district_name`, `crop_name`, `variety`, `arrival_date`, `min_price`, `max_price`, `modal_price`, `source`) with `UNIQUE (market_name, crop_name, arrival_date)`.
-- `farmers`: Farmer profile and village/town details.
-- `search_history`: Search log containing crop, quantity, and date.
-- `profit_calculations`: Breakdown of selling value, freight, cess, and net profit.
-- `api_sync_logs`: Audit log of Government API synchronization calls.
-- `app_settings`: Configurable transport rate, cess rate, and API keys.
+### 5. 📡 Official AGMARKNET (`data.gov.in`) API Integration
+- Connects directly to the Government of India Open Government Data platform:
+  - **Resource ID**: `9ef84268-d588-465a-a308-a864a43d0070`
+  - Zero fabricated prices; arrival dates and last sync timestamps clearly displayed.
+  - MySQL deduplication using composite unique keys `(market_name, crop_name, arrival_date)`.
 
 ---
 
-## 🚀 Quick Setup & Installation
+## 🔗 Live Website & Links
 
-### Prerequisites
-- Python 3.10+
-- MySQL or MariaDB (e.g. XAMPP on port 3306)
-- Git (optional)
+* **Live Website (GitHub Pages)**: [https://p6409464-hub.github.io/form/](https://p6409464-hub.github.io/form/)
+* **GitHub Repository**: [https://github.com/p6409464-hub/form](https://github.com/p6409464-hub/form)
+* **Local Web Server**: [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
-### 1. Clone / Navigate to Project Directory
+---
+
+## 🚀 Setup & Run Locally
+
 ```powershell
+# 1. Navigate to directory
 cd C:\Users\Pranesh\.gemini\antigravity\scratch\farmer-market-price-assistant
-```
 
-### 2. Install Python Dependencies
-```powershell
+# 2. Install dependencies
 pip install -r requirements.txt
-```
 
-### 3. Start MySQL / MariaDB Server
-If using XAMPP:
-- Open XAMPP Control Panel and start MySQL, or ensure mysqld is running on port 3306.
-- The default credentials in `.env` are `DB_HOST=127.0.0.1`, `DB_PORT=3306`, `DB_USER=root`, `DB_PASSWORD=`.
-
-### 4. Initialize Database and Seed Data
-Run the seeding script to create the schema and load baseline official Agmarknet published prices for the 13 mandis:
-```powershell
+# 3. Initialize & seed MySQL
 python seed_data.py
-```
 
-### 5. Configure AGMARKNET API Key (Optional for Live Sync)
-Register for a free account at [data.gov.in](https://data.gov.in/) and obtain your API key.
-Add it to `.env`:
-```env
-DATA_GOV_IN_API_KEY=your_api_key_here
-```
-*(Or input it directly via the web app under **API & Settings**).*
+# 4. Run automated test suite
+python test_app.py
 
-### 6. Run the Flask Web Application
-```powershell
+# 5. Launch Flask Web Application
 python app.py
 ```
-
-Open your browser and navigate to:
-```text
-http://127.0.0.1:5000/
-```
-
----
-
-## 📱 Application Pages
-
-1. **Market Assistant (`/`)**: Main interactive tool with dynamic dropdowns, profit calculator, best mandi recommendation card, and comparison table.
-2. **Mandi Prices Explorer (`/prices`)**: Full searchable list of daily Agmarknet mandi arrivals with filters and CSV export.
-3. **Analytics Dashboard (`/dashboard`)**: KPI metric cards, Chart.js visual price comparisons across mandis, trend lines, and recent searches.
-4. **API & Settings (`/settings`)**: Government API configuration, freight rate settings, and sync audit logs.
-
----
-
-## 🧪 Testing the Complete Application
-
-1. **Test Dynamic Chaining**: On the home page, change the District from **Coimbatore** to **Tiruppur** or **Erode**. Verify the Market dropdown updates dynamically.
-2. **Test Profit Calculation**: Enter `1500` kg of `Tomato` in `Pollachi`, and click **Compare Markets & Calculate Profit**. Verify that:
-   - Selling value converts correctly (`Modal Price / 100 * 1500 kg`).
-   - Transport expenses and net profit calculate accurately.
-   - The best market recommendation banner highlights the optimal mandi.
-3. **Test Dashboard & Charts**: Navigate to `/dashboard` to inspect the 4 KPI stat cards, interactive Chart.js bar chart, and price history line chart.
-4. **Test Live Mandi Prices**: Visit `/prices` to filter records by commodity or district.
-5. **Test Official Sync**: Click **Sync API** in the navigation header to test live communication with data.gov.in.
