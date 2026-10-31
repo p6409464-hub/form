@@ -5,6 +5,9 @@ Seed initial master data:
 - Expanded 50+ Tamil Nadu & All-India regional crops with Tamil names
 - Baseline Agmarknet published market prices with arrival dates
 - Default app configurations
+- Marketplace sample listings (Buyers & Sellers)
+- Automatic price alerts
+- Farm ledger entries (Income & Expenses)
 """
 
 import sys
@@ -263,7 +266,61 @@ def seed_all():
                 settings
             )
 
-        print("Database seeded with expanded all-India crops & mandis!", flush=True)
+            # 6. Seed Marketplace Listings (Buyers & Sellers)
+            marketplace_data = [
+                ('SELL', 'S. Natarajan', '+91 94432 18901', 'Farmer', 'Coimbatore', 'Pollachi Rural (Anaimalai)', 'Coconut', 'Tall Grade A', 5000.00, 36.50, 'Organically farmed mature dry coconuts, ready for oil copra or direct wholesale dispatch.', 'ACTIVE'),
+                ('SELL', 'M. Velusamy', '+91 98422 45112', 'Farmer', 'Erode', 'Gobichettipalayam', 'Turmeric', 'Finger (Viral)', 3200.00, 155.00, 'Boiled and sun-dried Erode finger turmeric, high curcumin (>4.2%), stored in clean dry gunny bags.', 'ACTIVE'),
+                ('SELL', 'K. Ramasamy', '+91 97881 23489', 'Farmer', 'Tiruppur', 'Palladam', 'Onion', 'Small Shallot', 4500.00, 52.00, 'Freshly harvested small pink shallots, sun-cured for 4 days, sorted size 25-35mm.', 'ACTIVE'),
+                ('BUY', 'Kongu Agro Oil Traders', '+91 94421 88990', 'Processor', 'Tiruppur', 'Kangayam Copra Market', 'Coconut', 'Milling Copra', 10000.00, 37.00, 'Urgent requirement for milling grade copra with moisture below 6%. Immediate RTGS payment.', 'ACTIVE'),
+                ('BUY', 'Cauvery Spices Export Co.', '+91 98430 77112', 'Trader', 'Erode', 'Perundurai Road Market', 'Turmeric', 'Finger / Bulb', 8000.00, 158.00, 'Procuring export-standard finger turmeric for gulf shipment. Agmark certification required.', 'ACTIVE'),
+                ('BUY', 'Kerala Fresh Veggie Direct', '+91 98951 33440', 'Trader', 'Coimbatore', 'Pollachi APMC Yard', 'Tomato', 'Hybrid Grade 1', 6000.00, 28.50, 'Daily purchase of firm red hybrid tomatoes for Ernakulam / Palakkad wholesale supply.', 'ACTIVE')
+            ]
+            cursor.executemany(
+                """
+                INSERT IGNORE INTO marketplace_listings 
+                (listing_type, user_name, user_phone, user_role, district, location, crop_name, variety, quantity_kg, price_per_kg, notes, status)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                marketplace_data
+            )
+
+            # 7. Seed Automatic Price Alerts
+            alerts_data = [
+                ('K. Selvaraj', 'selvaraj.pollachi@gmail.com', 'Tomato', 'Pollachi', 'ABOVE', 30.00, 1),
+                ('P. Thangavel', 'thangavel.erode@yahoo.com', 'Turmeric', 'Erode', 'ABOVE', 160.00, 1),
+                ('R. Marimuthu', '9842233110', 'Onion', 'Palladam', 'BELOW', 48.00, 1),
+                ('C. Subramani', '9443155220', 'Coconut', 'Kangayam', 'ABOVE', 38.00, 1)
+            ]
+            cursor.executemany(
+                """
+                INSERT IGNORE INTO price_alerts 
+                (farmer_name, contact, crop_name, market_name, condition_type, target_price_per_kg, is_active)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """,
+                alerts_data
+            )
+
+            # 8. Seed Farm Ledger (Income & Expenses)
+            ledger_data = [
+                ('INCOME', 'Crop Sale', 'Tomato harvest sale to Pollachi Mandi (1,500 kg)', 42000.00, 'Tomato', today - timedelta(days=3), 'Direct auction settlement @ Rs 28/kg'),
+                ('EXPENSE', 'Labor / Coolie', 'Tomato picking labor wages (6 workers x Rs 450)', 2700.00, 'Tomato', today - timedelta(days=4), 'Harvest labor payment'),
+                ('EXPENSE', 'Transportation', 'Tempo freight charges to Pollachi market (22 km)', 650.00, 'Tomato', today - timedelta(days=3), 'Tata Ace transport charges'),
+                ('INCOME', 'Crop Sale', 'Coconut copra delivery to Kangayam mill (2,000 kg)', 74000.00, 'Coconut', today - timedelta(days=8), 'RTGS payment received @ Rs 37/kg'),
+                ('EXPENSE', 'Fertilizer', 'Complex 17:17:17 fertilizer (4 bags) & Potassium', 5600.00, 'Coconut', today - timedelta(days=14), 'Cooperative society purchase'),
+                ('EXPENSE', 'Tractor Rent', 'Tractor rotary tilling & bed preparation (4 hours)', 3600.00, 'Onion', today - timedelta(days=18), 'Land prep for winter onion'),
+                ('EXPENSE', 'Seeds / Saplings', 'Small Onion seed bulbs purchase (200 kg)', 9800.00, 'Onion', today - timedelta(days=20), 'Certified seeds from Dharapuram'),
+                ('EXPENSE', 'Irrigation / EB', 'Drip irrigation filter maintenance and pipe repair', 1850.00, 'General', today - timedelta(days=25), 'Filter flushing and lateral drippers')
+            ]
+            cursor.executemany(
+                """
+                INSERT IGNORE INTO farm_ledger 
+                (entry_type, category, title, amount, crop_name, entry_date, notes)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """,
+                ledger_data
+            )
+
+        print("Database seeded with expanded all-India crops, mandis, marketplace, alerts & ledger!", flush=True)
     finally:
         conn.close()
 

@@ -123,12 +123,18 @@
             <div class="input-hint">1 Quintal = 100 kg. Example: 1,000 kg = 10 Quintals.</div>
           </div>
 
-          <!-- 6. Farmer Location -->
+          <!-- 6. Farmer Location with GPS Button -->
           <div class="form-group">
-            <label class="form-label" for="farmerLocation">
-              Farmer Location (Village / Town) <span class="req">*</span>
-            </label>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+              <label class="form-label" for="farmerLocation" style="margin-bottom:0;">
+                Farmer Location (Village / Town) <span class="req">*</span>
+              </label>
+              <button type="button" class="btn btn-secondary-farm" style="padding: 0.2rem 0.6rem; font-size: 0.78rem;" onclick="detectFarmerGPS()">
+                📍 Use My GPS Location
+              </button>
+            </div>
             <input type="text" id="farmerLocation" list="locationSuggestions" class="form-control" placeholder="e.g. Pollachi Rural, Udumalpet, Sulur" value="Pollachi" required>
+            <div id="gpsStatusBadge" style="display:none; font-size: 0.78rem; color: #15803d; margin-top: 0.3rem;"></div>
             <datalist id="locationSuggestions">
               <!-- Coimbatore -->
               <option value="Pollachi">Coimbatore - Pollachi</option>
@@ -152,6 +158,41 @@
               <option value="Anthiyur">Erode - Anthiyur</option>
             </datalist>
             <div class="input-hint">Used to calculate exact road distance to all 13 mandis.</div>
+          </div>
+
+          <!-- Vehicle Fleet Selector -->
+          <div class="form-group">
+            <label class="form-label">Transport Vehicle Fleet:</label>
+            <div class="vehicle-fleet-grid">
+              <div class="vehicle-card" id="vCard_auto" onclick="selectVehicleFleet('auto', 12)">
+                <div class="vehicle-icon">🛺</div>
+                <div>
+                  <div class="vehicle-name">Auto / 3-Wheeler</div>
+                  <div class="vehicle-rate">₹12/km (&lt;500 kg)</div>
+                </div>
+              </div>
+              <div class="vehicle-card active" id="vCard_mini" onclick="selectVehicleFleet('mini', 16)">
+                <div class="vehicle-icon">🚚</div>
+                <div>
+                  <div class="vehicle-name">Tata Ace (1.5 Ton)</div>
+                  <div class="vehicle-rate">₹16/km (Standard)</div>
+                </div>
+              </div>
+              <div class="vehicle-card" id="vCard_medium" onclick="selectVehicleFleet('medium', 24)">
+                <div class="vehicle-icon">🚛</div>
+                <div>
+                  <div class="vehicle-name">Medium Commercial</div>
+                  <div class="vehicle-rate">₹24/km (&lt;4 Tons)</div>
+                </div>
+              </div>
+              <div class="vehicle-card" id="vCard_heavy" onclick="selectVehicleFleet('heavy', 36)">
+                <div class="vehicle-icon">🚛</div>
+                <div>
+                  <div class="vehicle-name">Heavy Truck (10 Ton)</div>
+                  <div class="vehicle-rate">₹36/km (Bulk)</div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Optional Farmer Details -->

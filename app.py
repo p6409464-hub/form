@@ -1,6 +1,14 @@
 """
 Farmer Market Price Assistant - Main Flask Application
 Developed for Tamil Nadu Farmers (Coimbatore, Tiruppur, Erode) & All-India Market Intelligence
+Includes:
+- AI-based crop price prediction
+- Weather forecasts & agricultural alerts
+- GPS-based distance & vehicle transport cost calculations
+- Buyer & Seller connection marketplace
+- Automatic crop price alerts
+- Farm income & expense ledger
+- Crop storage and shelf-life recommendations
 """
 
 import os
@@ -16,7 +24,10 @@ from agmarknet_service import (
     get_active_api_key,
     save_active_api_key
 )
-from profit_service import calculate_market_comparison
+from profit_service import calculate_market_comparison, haversine_distance
+from ai_prediction_service import generate_ai_price_forecast
+from weather_service import get_weather_forecast
+from storage_advisor_service import STORAGE_DATABASE, COLD_STORAGE_DIRECTORY, calculate_shelf_life
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -332,16 +343,12 @@ def api_mandi_prices():
 
 @app.route("/api/historical-day-by-day")
 def api_historical_day_by_day():
-    """
-    Returns day-by-day market price history for any year (2020-2026) and month.
-    Includes DoD changes and price volatility.
-    """
+    """Returns day-by-day market price history for any year (2020-2026) and month."""
     crop = request.args.get("crop", "Tomato")
     market = request.args.get("market", "Pollachi")
     year = int(request.args.get("year", 2026))
     month = int(request.args.get("month", 10))
 
-    # Base price lookup
     base_row = query_db(
         "SELECT modal_price FROM daily_prices WHERE LOWER(crop_name) = LOWER(%s) AND LOWER(market_name) = LOWER(%s) ORDER BY arrival_date DESC LIMIT 1",
         (crop, market),
@@ -349,11 +356,9 @@ def api_historical_day_by_day():
     )
     base_price = float(base_row["modal_price"]) if base_row else 2800.0
 
-    # Macro year multiplier
     year_mults = {2020: 0.76, 2021: 0.82, 2022: 0.90, 2023: 0.95, 2024: 0.98, 2025: 1.00, 2026: 1.03}
     ym = year_mults.get(year, 1.0)
 
-    # Days in month
     if month in [1, 3, 5, 7, 8, 10, 12]:
         days_in_month = 31
     elif month in [4, 6, 9, 11]:
@@ -399,6 +404,281 @@ def api_historical_day_by_day():
         "year": year,
         "month": month,
         "records": items
+    })
+
+# =========================================================================
+# MODULE 1: AI-Based Price Prediction
+# =========================================================================
+@app.route("/api/ai-price-prediction")
+def api_ai_price_prediction():
+    """Generates AI price forecast for 7, 15, or 30 days based on historical verified data."""
+    crop = request.args.get("crop", "Tomato")
+    market = request.args.get("market", "Pollachi")
+    days = int(request.args.get("days", 15))
+    forecast = generate_ai_price_forecast(crop, market, days)
+    return jsonify({"success": True, "data": forecast})
+
+# =========================================================================
+# MODULE 2: Weather Forecast and Agricultural Alerts
+# =========================================================================
+@app.route("/api/weather-forecast")
+def api_weather_forecast():
+    """Fetches real meteorological forecast and agro-advisories from Open-Meteo."""
+    location = request.args.get("location", "Coimbatore")
+    weather_data = get_weather_forecast(location)
+    return jsonify(weather_data)
+
+# =========================================================================
+# MODULE 3: GPS-Based Distance & Vehicle Transportation Cost
+# =========================================================================
+@app.route("/api/gps-route-cost", methods=["POST"])
+def api_gps_route_cost():
+    """Calculates exact geodesic distance and freight cost by vehicle type from farmer GPS."""
+    data = request.get_json() or {}
+    try:
+        lat = float(data.get("latitude", 11.0168))
+        lng = float(data.get("longitude", 76.9558))
+        qty_kg = float(data.get("quantity_kg", 1000))
+    except (ValueError, TypeError):
+        return jsonify({"success": False, "error": "Invalid coordinates or quantity."}), 400
+
+    vehicle_type = data.get("vehicle_type", "mini_truck") # mini_truck, medium_truck, heavy_truck, auto
+    vehicle_rates = {
+        "auto": 12.0,        # Under 500 kg
+        "mini_truck": 16.0,  # Tata Ace (up to 1.5 tons)
+        "medium_truck": 24.0,# 407 / Pickup (up to 4 tons)
+        "heavy_truck": 36.0  # Lorry / Tractor (up to 10 tons)
+    }
+    rate_km = vehicle_rates.get(vehicle_type, 16.0)
+
+    markets = query_db("SELECT id, district_name, market_name, latitude, longitude FROM markets ORDER BY district_name, market_name")
+    results = []
+
+    for m in markets:
+        m_lat = float(m["latitude"])
+        m_lng = float(m["longitude"])
+        dist_km = haversine_distance(lat, lng, m_lat, m_lng)
+        total_freight = round(dist_km * rate_km, 2)
+        freight_per_kg = round(total_freight / qty_kg, 2) if qty_kg > 0 else 0.0
+
+        results.append({
+            "market_name": m["market_name"],
+            "district_name": m["district_name"],
+            "distance_km": dist_km,
+            "vehicle_type": vehicle_type,
+            "rate_per_km": rate_km,
+            "total_transport_cost": total_freight,
+            "freight_per_kg": freight_per_kg
+        })
+
+    results.sort(key=lambda x: x["distance_km"])
+    return jsonify({"success": True, "farmer_coords": {"lat": lat, "lng": lng}, "markets": results})
+
+# =========================================================================
+# MODULE 4: Buyer and Seller Connection Marketplace
+# =========================================================================
+@app.route("/api/marketplace/listings", methods=["GET", "POST"])
+def api_marketplace_listings():
+    """Browse and create buyer/seller marketplace offers."""
+    if request.method == "POST":
+        data = request.get_json() or {}
+        l_type = data.get("listing_type", "SELL")
+        name = data.get("user_name", "").strip()
+        phone = data.get("user_phone", "").strip()
+        role = data.get("user_role", "Farmer")
+        district = data.get("district", "Coimbatore")
+        loc = data.get("location", "").strip()
+        crop = data.get("crop_name", "").strip()
+        variety = data.get("variety", "Standard").strip()
+        try:
+            qty = float(data.get("quantity_kg", 0))
+            price = float(data.get("price_per_kg", 0))
+        except (ValueError, TypeError):
+            return jsonify({"success": False, "error": "Invalid quantity or price."}), 400
+
+        notes = data.get("notes", "").strip()
+
+        if not name or not phone or not crop or qty <= 0 or price <= 0:
+            return jsonify({"success": False, "error": "Please fill all required marketplace fields."}), 400
+
+        new_id = execute_db(
+            """
+            INSERT INTO marketplace_listings 
+            (listing_type, user_name, user_phone, user_role, district, location, crop_name, variety, quantity_kg, price_per_kg, notes, status)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'ACTIVE')
+            """,
+            (l_type, name, phone, role, district, loc, crop, variety, qty, price, notes),
+            return_last_id=True
+        )
+        return jsonify({"success": True, "listing_id": new_id, "message": "Listing published successfully!"})
+
+    # GET
+    l_type = request.args.get("type", "")
+    crop = request.args.get("crop", "")
+    district = request.args.get("district", "")
+
+    query = "SELECT * FROM marketplace_listings WHERE status = 'ACTIVE'"
+    params = []
+    if l_type:
+        query += " AND listing_type = %s"
+        params.append(l_type)
+    if crop:
+        query += " AND LOWER(crop_name) = LOWER(%s)"
+        params.append(crop)
+    if district:
+        query += " AND district = %s"
+        params.append(district)
+
+    query += " ORDER BY created_at DESC LIMIT 50"
+    listings = query_db(query, tuple(params))
+    return jsonify({"success": True, "data": listings, "count": len(listings)})
+
+# =========================================================================
+# MODULE 5: Automatic Crop Price Alerts Through Notifications
+# =========================================================================
+@app.route("/api/price-alerts", methods=["GET", "POST"])
+def api_price_alerts():
+    """Configure and list automatic price threshold alerts."""
+    if request.method == "POST":
+        data = request.get_json() or {}
+        name = data.get("farmer_name", "").strip()
+        contact = data.get("contact", "").strip()
+        crop = data.get("crop_name", "").strip()
+        market = data.get("market_name", "").strip()
+        cond = data.get("condition_type", "ABOVE")
+        try:
+            target_price = float(data.get("target_price_per_kg", 0))
+        except (ValueError, TypeError):
+            return jsonify({"success": False, "error": "Invalid target price."}), 400
+
+        if not name or not contact or not crop or not market or target_price <= 0:
+            return jsonify({"success": False, "error": "All alert fields are required."}), 400
+
+        aid = execute_db(
+            """
+            INSERT INTO price_alerts 
+            (farmer_name, contact, crop_name, market_name, condition_type, target_price_per_kg, is_active)
+            VALUES (%s, %s, %s, %s, %s, %s, 1)
+            """,
+            (name, contact, crop, market, cond, target_price),
+            return_last_id=True
+        )
+        return jsonify({"success": True, "alert_id": aid, "message": "Price alert created successfully!"})
+
+    # GET
+    alerts = query_db("SELECT * FROM price_alerts ORDER BY created_at DESC LIMIT 30")
+    return jsonify({"success": True, "data": alerts})
+
+@app.route("/api/check-alerts")
+def api_check_alerts():
+    """Checks active alerts against current market prices and returns triggered alerts."""
+    alerts = query_db("SELECT * FROM price_alerts WHERE is_active = 1")
+    triggered = []
+
+    for a in alerts:
+        price_row = query_db(
+            "SELECT modal_price, arrival_date FROM daily_prices WHERE LOWER(crop_name) = LOWER(%s) AND LOWER(market_name) = LOWER(%s) ORDER BY arrival_date DESC LIMIT 1",
+            (a["crop_name"], a["market_name"]),
+            one=True
+        )
+        if price_row:
+            current_kg = round(float(price_row["modal_price"]) / 100.0, 2)
+            target = float(a["target_price_per_kg"])
+            is_hit = (a["condition_type"] == "ABOVE" and current_kg >= target) or \
+                     (a["condition_type"] == "BELOW" and current_kg <= target)
+
+            if is_hit:
+                triggered.append({
+                    "alert_id": a["id"],
+                    "farmer_name": a["farmer_name"],
+                    "contact": a["contact"],
+                    "crop_name": a["crop_name"],
+                    "market_name": a["market_name"],
+                    "condition": a["condition_type"],
+                    "target_price": target,
+                    "current_price": current_kg,
+                    "arrival_date": str(price_row["arrival_date"])
+                })
+
+    return jsonify({"success": True, "triggered_alerts": triggered, "count": len(triggered)})
+
+# =========================================================================
+# MODULE 7: Farmer Income & Expense Management (Farm Ledger)
+# =========================================================================
+@app.route("/api/farm-ledger", methods=["GET", "POST"])
+def api_farm_ledger():
+    """Manages farmer income and expenses."""
+    if request.method == "POST":
+        data = request.get_json() or {}
+        e_type = data.get("entry_type", "EXPENSE")
+        cat = data.get("category", "General").strip()
+        title = data.get("title", "").strip()
+        crop = data.get("crop_name", "").strip()
+        notes = data.get("notes", "").strip()
+        e_date = data.get("entry_date") or str(date.today())
+
+        try:
+            amt = float(data.get("amount", 0))
+        except (ValueError, TypeError):
+            return jsonify({"success": False, "error": "Invalid amount."}), 400
+
+        if not title or amt <= 0:
+            return jsonify({"success": False, "error": "Title and amount > 0 are required."}), 400
+
+        lid = execute_db(
+            """
+            INSERT INTO farm_ledger (entry_type, category, title, amount, crop_name, entry_date, notes)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """,
+            (e_type, cat, title, amt, crop, e_date, notes),
+            return_last_id=True
+        )
+        return jsonify({"success": True, "entry_id": lid, "message": "Transaction recorded in Farm Ledger!"})
+
+    # GET: Summaries and records
+    entries = query_db("SELECT * FROM farm_ledger ORDER BY entry_date DESC, id DESC LIMIT 50")
+    total_income = query_db("SELECT COALESCE(SUM(amount), 0) as total FROM farm_ledger WHERE entry_type = 'INCOME'", one=True)["total"]
+    total_expense = query_db("SELECT COALESCE(SUM(amount), 0) as total FROM farm_ledger WHERE entry_type = 'EXPENSE'", one=True)["total"]
+    net_profit = float(total_income) - float(total_expense)
+    profit_margin = round((net_profit / float(total_income)) * 100, 1) if float(total_income) > 0 else 0.0
+
+    category_breakdown = query_db(
+        """
+        SELECT category, entry_type, SUM(amount) as total
+        FROM farm_ledger
+        GROUP BY category, entry_type
+        ORDER BY total DESC
+        """
+    )
+
+    return jsonify({
+        "success": True,
+        "summary": {
+            "total_income": float(total_income),
+            "total_expense": float(total_expense),
+            "net_profit": net_profit,
+            "profit_margin_pct": profit_margin
+        },
+        "category_breakdown": category_breakdown,
+        "entries": entries
+    })
+
+# =========================================================================
+# MODULE 8: Crop Storage & Shelf-Life Recommendations
+# =========================================================================
+@app.route("/api/storage-recommendations")
+def api_storage_recommendations():
+    """Provides scientific storage parameters, remaining shelf life, and cold storages."""
+    crop = request.args.get("crop", "Tomato")
+    harvest_date = request.args.get("harvest_date", str(date.today()))
+    storage_type = request.args.get("storage_type", "ambient") # ambient or cold
+
+    shelf_info = calculate_shelf_life(crop, harvest_date, storage_type)
+    return jsonify({
+        "success": True,
+        "shelf_life": shelf_info,
+        "cold_storages": COLD_STORAGE_DIRECTORY,
+        "supported_crops": list(STORAGE_DATABASE.keys())
     })
 
 @app.route("/api/sync-agmarknet", methods=["POST"])

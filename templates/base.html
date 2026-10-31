@@ -140,6 +140,76 @@
     </div>
   </footer>
 
+  <!-- Floating Bilingual Voice Assistant (தமிழ் & English) -->
+  <button type="button" class="voice-fab" id="voiceFabBtn" onclick="toggleVoiceAssistant()">
+    <span>🎙️</span>
+    <span id="voiceFabText">Voice Assistant / குரல் உதவியாளர்</span>
+  </button>
+
+  <!-- Voice Assistant Dialog / Modal -->
+  <div class="modal-overlay" id="voiceModal">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 style="font-weight: 700; color: var(--primary-dark); font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span>🎙️</span> Farmer Voice Assistant (தமிழ் & English)
+        </h3>
+        <button type="button" onclick="closeVoiceAssistant()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text-muted);">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">Voice Language / மொழி:</span>
+          <div style="display: flex; gap: 0.4rem;">
+            <button type="button" class="btn btn-secondary-farm" id="voiceLang_ta" style="padding: 0.25rem 0.65rem; font-size: 0.8rem; font-weight: 700; background: #dcfce7; color: #15803d;" onclick="setVoiceLang('ta-IN')">
+              தமிழ் (Tamil)
+            </button>
+            <button type="button" class="btn btn-secondary-farm" id="voiceLang_en" style="padding: 0.25rem 0.65rem; font-size: 0.8rem;" onclick="setVoiceLang('en-IN')">
+              English
+            </button>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin: 1.25rem 0;">
+          <button type="button" id="voiceMicTriggerBtn" class="btn btn-primary-farm" style="border-radius: 50%; width: 70px; height: 70px; font-size: 1.8rem; margin: 0 auto; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(21,128,61,0.4);" onclick="toggleSpeechListen()">
+            🎙️
+          </button>
+          <div style="font-weight: 700; margin-top: 0.75rem; color: var(--text-dark);" id="voiceListenStatus">
+            Tap mic to speak / பேச மைக்கை தொடவும்
+          </div>
+        </div>
+
+        <div class="voice-waveform" id="voiceWaveform">
+          <div class="voice-bar"></div>
+          <div class="voice-bar"></div>
+          <div class="voice-bar"></div>
+          <div class="voice-bar"></div>
+          <div class="voice-bar"></div>
+        </div>
+
+        <div class="voice-bubble" id="voiceUserTranscript">
+          <em>You said:</em> <span id="voiceTranscriptText">Press the mic button and ask a question...</span>
+        </div>
+
+        <div class="voice-bubble" id="voiceResponseBubble" style="background:#ffffff; border-color:#cbd5e1; margin-top:0.75rem;">
+          <em>Assistant:</em> <span id="voiceResponseText">Vanakkam! Ask about mandi rates, weather, profit, or storage. (வணக்கம்! சந்தை விலை, வானிலை, லாபம் பற்றி கேளுங்கள்.)</span>
+        </div>
+
+        <!-- Quick Sample Voice Chips -->
+        <div style="margin-top: 1rem;">
+          <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.4rem;">Or click a sample voice query:</div>
+          <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+            <span class="crop-chip" onclick="handleVoiceQueryText('Tomato price in Pollachi')">🍅 Pollachi Tomato</span>
+            <span class="crop-chip" onclick="handleVoiceQueryText('பொள்ளாச்சி தேங்காய் விலை என்ன')">🥥 பொள்ளாச்சி தேங்காய்</span>
+            <span class="crop-chip" onclick="handleVoiceQueryText('Weather in Erode')">🌦️ Erode Weather</span>
+            <span class="crop-chip" onclick="handleVoiceQueryText('Best market for Turmeric')">🏆 Best Market Turmeric</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary-farm" onclick="closeVoiceAssistant()">Close</button>
+      </div>
+    </div>
+  </div>
+
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
   {% block scripts %}{% endblock %}
 </body>

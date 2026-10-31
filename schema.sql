@@ -130,3 +130,70 @@ CREATE TABLE IF NOT EXISTS `app_settings` (
     `description` VARCHAR(255) DEFAULT NULL,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 10. Buyer & Seller Connection Marketplace
+CREATE TABLE IF NOT EXISTS `marketplace_listings` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `listing_type` ENUM('SELL', 'BUY') NOT NULL,
+    `user_name` VARCHAR(120) NOT NULL,
+    `user_phone` VARCHAR(25) NOT NULL,
+    `user_role` VARCHAR(50) NOT NULL DEFAULT 'Farmer',
+    `district` VARCHAR(100) NOT NULL,
+    `location` VARCHAR(150) NOT NULL,
+    `crop_name` VARCHAR(100) NOT NULL,
+    `variety` VARCHAR(100) DEFAULT 'Standard',
+    `quantity_kg` DECIMAL(10, 2) NOT NULL,
+    `price_per_kg` DECIMAL(10, 2) NOT NULL,
+    `notes` TEXT DEFAULT NULL,
+    `status` VARCHAR(20) DEFAULT 'ACTIVE',
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX `idx_market_crop` (`crop_name`, `district`),
+    INDEX `idx_market_type` (`listing_type`, `status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 11. Automatic Price Alerts
+CREATE TABLE IF NOT EXISTS `price_alerts` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `farmer_name` VARCHAR(120) NOT NULL,
+    `contact` VARCHAR(100) NOT NULL,
+    `crop_name` VARCHAR(100) NOT NULL,
+    `market_name` VARCHAR(100) NOT NULL,
+    `condition_type` ENUM('ABOVE', 'BELOW') NOT NULL,
+    `target_price_per_kg` DECIMAL(10, 2) NOT NULL,
+    `is_active` TINYINT(1) DEFAULT 1,
+    `last_triggered_at` TIMESTAMP NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX `idx_alert_crop` (`crop_name`, `market_name`, `is_active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 12. Farmer Income & Expense Management (Farm Ledger)
+CREATE TABLE IF NOT EXISTS `farm_ledger` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `entry_type` ENUM('INCOME', 'EXPENSE') NOT NULL,
+    `category` VARCHAR(100) NOT NULL,
+    `title` VARCHAR(200) NOT NULL,
+    `amount` DECIMAL(12, 2) NOT NULL,
+    `crop_name` VARCHAR(100) DEFAULT NULL,
+    `entry_date` DATE NOT NULL,
+    `notes` TEXT DEFAULT NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX `idx_ledger_date` (`entry_date`),
+    INDEX `idx_ledger_type` (`entry_type`, `category`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 13. AI-Based Crop Price Predictions
+CREATE TABLE IF NOT EXISTS `ai_price_forecasts` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `crop_name` VARCHAR(100) NOT NULL,
+    `market_name` VARCHAR(100) NOT NULL,
+    `forecast_date` DATE NOT NULL,
+    `predicted_modal_price` DECIMAL(10, 2) NOT NULL,
+    `lower_bound` DECIMAL(10, 2) NOT NULL,
+    `upper_bound` DECIMAL(10, 2) NOT NULL,
+    `confidence_pct` DECIMAL(5, 2) NOT NULL DEFAULT 92.50,
+    `trend_direction` VARCHAR(20) NOT NULL,
+    `advisory_action` TEXT DEFAULT NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY `uniq_forecast` (`crop_name`, `market_name`, `forecast_date`),
+    INDEX `idx_forecast_date` (`forecast_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
