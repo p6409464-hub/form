@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+
+{% block title %}Farmer Market Price Assistant | Coimbatore, Tiruppur, Erode{% endblock %}
+
+{% block content %}
+<!-- Page Hero Banner -->
+<section class="page-hero">
+  <div class="page-hero-content">
+    <h1>🌾 Farmer Market Price Assistant</h1>
+    <p>
+      Compare genuine daily agricultural prices across <strong>Coimbatore, Tiruppur, and Erode</strong> mandis, 
+      calculate your transportation expenses, and automatically find the market yielding the highest profit.
+    </p>
+  </div>
+  <div class="hero-stats-group">
+    <div class="hero-stat-pill">
+      <div class="hero-stat-icon">🏛️</div>
+      <div>
+        <div class="hero-stat-label">Markets Covered</div>
+        <div class="hero-stat-val">13 Mandis</div>
+      </div>
+    </div>
+    <div class="hero-stat-pill">
+      <div class="hero-stat-icon">🌱</div>
+      <div>
+        <div class="hero-stat-label">Crops Tracked</div>
+        <div class="hero-stat-val">{{ total_crops }} Varieties</div>
+      </div>
+    </div>
+    <div class="hero-stat-pill">
+      <div class="hero-stat-icon">📅</div>
+      <div>
+        <div class="hero-stat-label">Official Agmarknet Date</div>
+        <div class="hero-stat-val" id="heroLatestDate">{{ latest_date }}</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Assistant Two-Column Grid -->
+<div class="assistant-grid">
+  
+  <!-- Left Column: Farmer Input Form -->
+  <aside>
+    <div class="farm-card">
+      <div class="farm-card-header">
+        <div class="card-title-group">
+          <div class="card-title-icon">📝</div>
+          <div class="card-title-text">Crop & Market Input</div>
+        </div>
+        <span class="badge badge-source">Step 1 of 2</span>
+      </div>
+
+      <div class="farm-card-body">
+        <form id="priceAssistantForm" onsubmit="handleCalculateSubmit(event)">
+          
+          <!-- 1. Crop Name -->
+          <div class="form-group">
+            <label class="form-label" for="cropSelect">
+              Crop Name <span class="req">*</span>
+            </label>
+            <select id="cropSelect" class="form-control form-select" required onchange="handleCropChange(this.value)">
+              <option value="" disabled selected>-- Select a Commodity --</option>
+              {% for crop in crops %}
+                <option value="{{ crop.name }}" {% if crop.name == 'Tomato' %}selected{% endif %}>
+                  {{ crop.name }} {% if crop.tamil_name %}({{ crop.tamil_name }}){% endif %}
+                </option>
+              {% endfor %}
+            </select>
+            <div class="quick-crop-chips">
+              <span class="crop-chip active" onclick="setQuickCrop('Tomato')">Tomato (தக்காளி)</span>
+              <span class="crop-chip" onclick="setQuickCrop('Coconut')">Coconut (தேங்காய்)</span>
+              <span class="crop-chip" onclick="setQuickCrop('Turmeric')">Turmeric (மஞ்சள்)</span>
+              <span class="crop-chip" onclick="setQuickCrop('Onion')">Onion (வெங்காயம்)</span>
+              <span class="crop-chip" onclick="setQuickCrop('Banana')">Banana (வாழை)</span>
+              <span class="crop-chip" onclick="setQuickCrop('Maize')">Maize (மக்காச்சோளம்)</span>
+            </div>
+          </div>
+
+          <!-- 2. District Name -->
+          <div class="form-group">
+            <label class="form-label" for="districtSelect">
+              District Name <span class="req">*</span>
+            </label>
+            <select id="districtSelect" class="form-control form-select" required onchange="updateMarketsDropdown(this.value)">
+              <option value="" disabled>-- Select District --</option>
+              <option value="Coimbatore" selected>Coimbatore</option>
+              <option value="Tiruppur">Tiruppur</option>
+              <option value="Erode">Erode</option>
+            </select>
+            <div class="input-hint">Select one of the 3 target districts.</div>
+          </div>
+
+          <!-- 3. Market Name (Dynamic) -->
+          <div class="form-group">
+            <label class="form-label" for="marketSelect">
+              Target Market (Mandi) <span class="req">*</span>
+            </label>
+            <select id="marketSelect" class="form-control form-select" required>
+              <!-- Dynamically populated via JS -->
+            </select>
+            <div class="input-hint" id="marketCountHint">Showing markets in Coimbatore.</div>
+          </div>
+
+          <!-- 4. Date Picker -->
+          <div class="form-group">
+            <label class="form-label" for="marketDate">
+              Arrival Date <span class="req">*</span>
+            </label>
+            <input type="date" id="marketDate" class="form-control" value="{{ today_date }}" required>
+            <div class="input-hint">Defaults to today's date for latest market rates.</div>
+          </div>
+
+          <!-- 5. Crop Quantity -->
+          <div class="form-group">
+            <label class="form-label" for="cropQuantity">
+              Crop Quantity (in kg) <span class="req">*</span>
+            </label>
+            <div style="position: relative;">
+              <input type="number" id="cropQuantity" class="form-control" placeholder="e.g. 1500" value="1000" min="1" step="1" required>
+              <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-weight: 600; color: var(--text-muted); font-size: 0.85rem;">kg</span>
+            </div>
+            <div class="input-hint">1 Quintal = 100 kg. Example: 1,000 kg = 10 Quintals.</div>
+          </div>
+
+          <!-- 6. Farmer Location -->
+          <div class="form-group">
+            <label class="form-label" for="farmerLocation">
+              Farmer Location (Village / Town) <span class="req">*</span>
+            </label>
+            <input type="text" id="farmerLocation" list="locationSuggestions" class="form-control" placeholder="e.g. Pollachi Rural, Udumalpet, Sulur" value="Pollachi" required>
+            <datalist id="locationSuggestions">
+              <!-- Coimbatore -->
+              <option value="Pollachi">Coimbatore - Pollachi</option>
+              <option value="Annur">Coimbatore - Annur</option>
+              <option value="Sulur">Coimbatore - Sulur</option>
+              <option value="Kinathukkadavu">Coimbatore - Kinathukkadavu</option>
+              <option value="Mettupalayam">Coimbatore - Mettupalayam</option>
+              <option value="Thondamuthur">Coimbatore - Thondamuthur</option>
+              <!-- Tiruppur -->
+              <option value="Udumalpet">Tiruppur - Udumalpet</option>
+              <option value="Dharapuram">Tiruppur - Dharapuram</option>
+              <option value="Palladam">Tiruppur - Palladam</option>
+              <option value="Kangayam">Tiruppur - Kangayam</option>
+              <option value="Avinashi">Tiruppur - Avinashi</option>
+              <!-- Erode -->
+              <option value="Erode">Erode - Erode</option>
+              <option value="Gobichettipalayam">Erode - Gobichettipalayam</option>
+              <option value="Perundurai">Erode - Perundurai</option>
+              <option value="Bhavani">Erode - Bhavani</option>
+              <option value="Sathyamangalam">Erode - Sathyamangalam</option>
+              <option value="Anthiyur">Erode - Anthiyur</option>
+            </datalist>
+            <div class="input-hint">Used to calculate exact road distance to all 13 mandis.</div>
+          </div>
+
+          <!-- Optional Farmer Details -->
+          <div style="margin-bottom: 1.15rem;">
+            <div class="collapsible-header" onclick="toggleAdvancedOptions()">
+              <span>⚙️ Advanced Cost & Farmer Details</span>
+              <span id="advancedToggleIcon">▼</span>
+            </div>
+            
+            <div class="collapsible-body" id="advancedOptions" style="display: none;">
+              <div class="form-group" style="margin-top: 0.6rem;">
+                <label class="form-label" for="farmerName">Farmer Name (Optional):</label>
+                <input type="text" id="farmerName" class="form-control" placeholder="e.g. K. Selvaraj">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="customTransportCost">Custom Total Transport Cost (₹):</label>
+                <input type="number" id="customTransportCost" class="form-control" placeholder="Leave empty for auto distance-based calculation" min="0" step="10">
+                <div class="input-hint">Default rate: ₹18.00 / km from farmer location.</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="customOtherExpenses">Custom Other Expenses (₹):</label>
+                <input type="number" id="customOtherExpenses" class="form-control" placeholder="Leave empty for standard ₹0.50/kg rate" min="0" step="10">
+                <div class="input-hint">Covers loading, mandi user fee, bagging, and labor.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="btn btn-primary-farm" id="calcSubmitBtn">
+            <span>🚀</span> Compare Markets & Calculate Profit
+          </button>
+        </form>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Right Column: Results, Best Market Recommendation & Comparison Table -->
+  <section id="resultsSection">
+    
+    <!-- Placeholder before search -->
+    <div id="resultsPlaceholder" class="farm-card" style="text-align: center; padding: 3rem 1.5rem;">
+      <div style="font-size: 3.5rem; margin-bottom: 1rem; animation: float 3s ease-in-out infinite;">🌾</div>
+      <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 0.5rem;">
+        Ready to Compare Market Prices
+      </h2>
+      <p style="color: var(--text-muted); max-width: 500px; margin: 0 auto 1.5rem; font-size: 0.95rem;">
+        Select your crop, district, and quantity on the left, then click <strong>Compare Markets & Calculate Profit</strong>.
+        We will evaluate prices across all 13 mandis in Coimbatore, Tiruppur, and Erode to recommend your most profitable market.
+      </p>
+      <button type="button" class="btn btn-primary-farm" style="max-width: 280px; margin: 0 auto;" onclick="document.getElementById('priceAssistantForm').dispatchEvent(new Event('submit', {cancelable: true, bubbles: true}))">
+        Run Default Comparison
+      </button>
+    </div>
+
+    <!-- Dynamic Results Container (Filled by JS) -->
+    <div id="resultsContainer" style="display: none;">
+      
+      <!-- Best Market Recommendation Card -->
+      <div class="recommendation-card" id="bestMarketCard">
+        <div class="recommendation-badge-top">
+          <span>🏆</span> Best Market Recommendation
+        </div>
+        
+        <h2 class="recommendation-title" id="recMarketName">Pollachi Market (Coimbatore)</h2>
+        <p class="recommendation-text" id="recExplanation">
+          Loading market recommendation and rationale...
+        </p>
+
+        <!-- Summary Metric Boxes -->
+        <div class="profit-summary-grid">
+          <div class="profit-stat-box">
+            <div class="profit-stat-label">Crop Selling Value</div>
+            <div class="profit-stat-val" id="statSellingValue">₹0.00</div>
+            <div class="profit-stat-sub" id="statModalPrice">@ ₹0.00 / kg</div>
+          </div>
+
+          <div class="profit-stat-box">
+            <div class="profit-stat-label">Transport Expenses</div>
+            <div class="profit-stat-val" id="statTransportCost" style="color: #b91c1c;">- ₹0.00</div>
+            <div class="profit-stat-sub" id="statDistance">0 km away</div>
+          </div>
+
+          <div class="profit-stat-box">
+            <div class="profit-stat-label">Other Expenses</div>
+            <div class="profit-stat-val" id="statOtherExpenses" style="color: #b91c1c;">- ₹0.00</div>
+            <div class="profit-stat-sub">Loading & Mandi Fees</div>
+          </div>
+
+          <div class="profit-stat-box highlight">
+            <div class="profit-stat-label">Estimated Final Profit</div>
+            <div class="profit-stat-val" id="statNetProfit">₹0.00</div>
+            <div class="profit-stat-sub">Highest Net Return</div>
+          </div>
+        </div>
+
+        <!-- Formula Notice -->
+        <div class="formula-banner">
+          <div>
+            <strong>Profit Formula:</strong>
+            <span class="formula-tag">Final Profit = Selling Value - Transport Cost - Other Expenses</span>
+          </div>
+          <div style="font-size: 0.78rem; color: var(--text-muted);">
+            Converted from Agmarknet Quintal rates (1 Quintal = 100 kg)
+          </div>
+        </div>
+      </div>
+
+      <!-- Market Comparison Table Card -->
+      <div class="farm-card">
+        <div class="farm-card-header">
+          <div class="card-title-group">
+            <div class="card-title-icon">📊</div>
+            <div>
+              <div class="card-title-text" id="comparisonTableTitle">Market Comparison Across Kongu Region</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);" id="comparisonSubtext">
+                Comparing Coimbatore, Tiruppur, and Erode markets
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <input type="text" id="tableFilterInput" class="form-control" placeholder="Search market..." style="padding: 0.35rem 0.65rem; font-size: 0.8rem; width: 140px;" oninput="filterComparisonTable(this.value)">
+            <button type="button" class="btn btn-secondary-farm" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;" onclick="exportComparisonCSV()">
+              📥 CSV
+            </button>
+            <button type="button" class="btn btn-secondary-farm" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;" onclick="window.print()">
+              🖨️ Print
+            </button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="comparison-table" id="comparisonTable">
+            <thead>
+              <tr>
+                <th>Market (Mandi)</th>
+                <th>District</th>
+                <th>Arrival Date</th>
+                <th>Modal Price (₹/Qtl)</th>
+                <th>Price / kg (₹)</th>
+                <th>Min / Max (₹/Qtl)</th>
+                <th>Est. Transport</th>
+                <th>Other Exp.</th>
+                <th>Estimated Profit (₹)</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="comparisonTableBody">
+              <!-- Dynamically rendered via app.js -->
+            </tbody>
+          </table>
+        </div>
+        
+        <div style="padding: 0.85rem 1.4rem; background-color: #f8fafc; border-top: 1px solid var(--border-color); font-size: 0.78rem; color: var(--text-muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+          <span>✅ Prices verified against official AGMARKNET daily arrivals dataset.</span>
+          <span id="tablePricedSummary">13 mandis evaluated.</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Pass dynamic markets map from Flask to JavaScript
+  window.MARKETS_BY_DISTRICT = {{ markets_by_district | tojson }};
+  
+  // Initialize market dropdown on page load
+  document.addEventListener("DOMContentLoaded", () => {
+    updateMarketsDropdown("Coimbatore");
+    // Trigger default calculation so farmer sees immediate useful data
+    setTimeout(() => {
+      calculateProfit(false);
+    }, 300);
+  });
+</script>
+{% endblock %}

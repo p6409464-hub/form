@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}API & System Settings | Farmer Market Price Assistant{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="page-hero-content">
+    <h1>⚙️ System & Government API Configuration</h1>
+    <p>
+      Manage your official <strong>data.gov.in</strong> AGMARKNET developer credentials, configure freight transportation rates 
+      and APMC cess, and view official API sync audit logs.
+    </p>
+  </div>
+</section>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.75rem; align-items: start;">
+  
+  <!-- Left Column: Settings Form -->
+  <div class="farm-card">
+    <div class="farm-card-header">
+      <div class="card-title-group">
+        <div class="card-title-icon">🔑</div>
+        <div class="card-title-text">Agmarknet API Credentials</div>
+      </div>
+      <span class="badge badge-source">data.gov.in</span>
+    </div>
+
+    <div class="farm-card-body">
+      <form action="{{ url_for('settings') }}" method="POST">
+        
+        <div class="form-group">
+          <label class="form-label" for="api_key">
+            data.gov.in Developer API Key:
+          </label>
+          <input type="password" id="api_key" name="api_key" class="form-control" value="{{ api_key or '' }}" placeholder="Enter 579b464d... developer API key">
+          <div class="input-hint">
+            To query live prices from the official Agmarknet resource (<code>9ef84268-d588-465a-a308-a864a43d0070</code>), register for free at 
+            <a href="https://data.gov.in" target="_blank" rel="noopener" style="color: var(--primary-green); text-decoration: underline;">data.gov.in</a> and paste your API key here.
+          </div>
+        </div>
+
+        <div style="margin: 1.25rem 0; border-top: 1px dashed var(--border-color); padding-top: 1.25rem;">
+          <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.85rem; color: var(--primary-dark);">
+            🚚 Transportation & Labor Defaults
+          </h4>
+
+          <div class="form-group">
+            <label class="form-label" for="transport_rate">
+              Freight Transport Rate (₹ per km):
+            </label>
+            <div style="position: relative;">
+              <input type="number" id="transport_rate" name="transport_rate" class="form-control" value="{{ settings.get('transport_rate_per_km', '18.00') }}" step="0.5" min="1" required>
+              <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">₹ / km</span>
+            </div>
+            <div class="input-hint">Standard regional freight rate for small trucks / tempo / pickup vehicles in the Kongu agricultural belt.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="other_expenses_rate">
+              Other Handling Expenses (₹ per kg):
+            </label>
+            <div style="position: relative;">
+              <input type="number" id="other_expenses_rate" name="other_expenses_rate" class="form-control" value="{{ settings.get('other_expenses_per_kg', '0.50') }}" step="0.05" min="0" required>
+              <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">₹ / kg</span>
+            </div>
+            <div class="input-hint">₹0.50/kg = ₹50 per Quintal. Covers loading, weighing, bagging, and regulated market committee charges.</div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+          <button type="submit" class="btn btn-primary-farm">
+            💾 Save Settings
+          </button>
+          <button type="button" class="btn btn-secondary-farm" onclick="testApiConnection()">
+            ⚡ Test Connection
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- Right Column: API Health & Sync History Logs -->
+  <div>
+    
+    <!-- API Health Card -->
+    <div class="farm-card">
+      <div class="farm-card-header">
+        <div class="card-title-group">
+          <div class="card-title-icon">📡</div>
+          <div class="card-title-text">Official AGMARKNET Status</div>
+        </div>
+        <button type="button" class="btn btn-sync" onclick="openSyncModal()">
+          🔄 Trigger Sync
+        </button>
+      </div>
+      <div class="farm-card-body">
+        <div style="display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.88rem;">
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.5rem;">
+            <span style="color: var(--text-muted);">Official Resource ID:</span>
+            <code>9ef84268-d588-465a-a308-a864a43d0070</code>
+          </div>
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.5rem;">
+            <span style="color: var(--text-muted);">API Status:</span>
+            <span style="color: #15803d; font-weight: 700;">● Active / Ready</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.5rem;">
+            <span style="color: var(--text-muted);">Active Districts:</span>
+            <span>Coimbatore, Tiruppur, Erode</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.5rem;">
+            <span style="color: var(--text-muted);">Total Regulated Mandis:</span>
+            <strong>13 Mandis</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-muted);">Last Sync Attempt:</span>
+            <span>{{ sync_info.latest_arrival_date or 'Recent' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sync Logs Card -->
+    <div class="farm-card">
+      <div class="farm-card-header">
+        <div class="card-title-group">
+          <div class="card-title-icon">📜</div>
+          <div class="card-title-text">API Sync Logs</div>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="comparison-table" style="font-size: 0.8rem;">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Status</th>
+              <th>Fetched</th>
+              <th>Updated</th>
+              <th>Log Message</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if sync_logs %}
+              {% for log in sync_logs %}
+                <tr>
+                  <td><code>{{ log.synced_at }}</code></td>
+                  <td>
+                    {% if log.status == 'SUCCESS' %}
+                      <span class="badge badge-recommended">SUCCESS</span>
+                    {% elif log.status == 'NO_DATA' %}
+                      <span class="badge" style="background:#fef3c7; color:#92400e;">NO DATA</span>
+                    {% else %}
+                      <span class="badge" style="background:#fee2e2; color:#b91c1c;">{{ log.status }}</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ log.records_fetched }}</td>
+                  <td>{{ log.records_inserted }}</td>
+                  <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ log.error_message }}">
+                    {{ log.error_message or 'OK' }}
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+                  No sync attempts logged yet.
+                </td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  async function testApiConnection() {
+    const key = document.getElementById("api_key").value.trim();
+    showToast("Testing connection to data.gov.in...", "info");
+    try {
+      const res = await fetch("/api/sync-agmarknet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ api_key: key, district: "Coimbatore" })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message, "success");
+      } else {
+        showToast(`API Response: ${data.message}`, "danger");
+      }
+    } catch (e) {
+      showToast(`Network Error: ${e.message}`, "danger");
+    }
+  }
+</script>
+{% endblock %}

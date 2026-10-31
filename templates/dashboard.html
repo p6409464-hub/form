@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Agricultural Analytics Dashboard | Farmer Market Price Assistant{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="page-hero-content">
+    <h1>📈 Agricultural Analytics Dashboard</h1>
+    <p>
+      Comprehensive market intelligence, price comparison charts, historical trends, and farmer query analytics 
+      across Coimbatore, Tiruppur, and Erode districts.
+    </p>
+  </div>
+  <div style="display: flex; gap: 0.5rem; align-items: center;">
+    <button type="button" class="btn btn-secondary-farm" onclick="loadDashboardMetrics()">
+      🔄 Refresh Data
+    </button>
+  </div>
+</section>
+
+<!-- 4 Key KPI Metrics Cards (Requirement 7) -->
+<div class="dashboard-metrics-grid">
+  
+  <!-- 1. Total Markets Searched -->
+  <div class="kpi-card">
+    <div class="kpi-icon-wrap kpi-icon-blue">
+      <span>🔍</span>
+    </div>
+    <div class="kpi-content">
+      <div class="kpi-title">Total Markets Searched</div>
+      <div class="kpi-value" id="kpiTotalSearches">0</div>
+      <div class="kpi-subtext">Farmer queries logged</div>
+    </div>
+  </div>
+
+  <!-- 2. Available Crop Prices -->
+  <div class="kpi-card">
+    <div class="kpi-icon-wrap kpi-icon-green">
+      <span>🌾</span>
+    </div>
+    <div class="kpi-content">
+      <div class="kpi-title">Available Crop Prices</div>
+      <div class="kpi-value" id="kpiAvailablePrices">0</div>
+      <div class="kpi-subtext">Active Agmarknet records</div>
+    </div>
+  </div>
+
+  <!-- 3. Highest Market Price -->
+  <div class="kpi-card">
+    <div class="kpi-icon-wrap kpi-icon-gold">
+      <span>💰</span>
+    </div>
+    <div class="kpi-content">
+      <div class="kpi-title">Highest Market Price</div>
+      <div class="kpi-value" id="kpiHighestPrice">₹0 / Qtl</div>
+      <div class="kpi-subtext" id="kpiHighestPriceSub">Evaluating mandis...</div>
+    </div>
+  </div>
+
+  <!-- 4. Best Profitable Market -->
+  <div class="kpi-card">
+    <div class="kpi-icon-wrap kpi-icon-purple">
+      <span>🏆</span>
+    </div>
+    <div class="kpi-content">
+      <div class="kpi-title">Best Profitable Market</div>
+      <div class="kpi-value" id="kpiBestMarket" style="font-size: 1.25rem;">Analyzing...</div>
+      <div class="kpi-subtext" id="kpiBestMarketSub">Based on net profits</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Crop Price Comparison Charts Grid (Requirement 7) -->
+<div class="charts-grid">
+  
+  <!-- Chart 1: Market-by-Market Price Comparison Bar Chart -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <div>
+        <div class="chart-title">Market Price Comparison Across Mandis</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted);">Modal Price (₹ per Quintal) across Coimbatore, Tiruppur, Erode</div>
+      </div>
+      <div>
+        <select id="chartCropSelector" class="form-control form-select" style="padding: 0.35rem 0.75rem; font-size: 0.85rem; width: 150px;" onchange="updateCropCharts(this.value)">
+          <option value="Tomato">Tomato</option>
+          <option value="Coconut">Coconut</option>
+          <option value="Turmeric">Turmeric</option>
+          <option value="Onion">Onion</option>
+          <option value="Banana">Banana</option>
+          <option value="Maize">Maize</option>
+        </select>
+      </div>
+    </div>
+    <div class="chart-canvas-wrapper">
+      <canvas id="marketComparisonChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Chart 2: Daily Price History & Trend Line Chart -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <div>
+        <div class="chart-title">Daily Price History & Trends</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted);" id="priceHistorySubtitle">Historical Agmarknet arrival rate movement</div>
+      </div>
+      <span class="badge badge-recommended" id="historyCropBadge">Tomato</span>
+    </div>
+    <div class="chart-canvas-wrapper">
+      <canvas id="priceTrendChart"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<!-- Chart 3: Kongu Commodities Modal Price Ranking -->
+<div class="farm-card">
+  <div class="farm-card-header">
+    <div class="card-title-group">
+      <div class="card-title-icon">📊</div>
+      <div>
+        <div class="card-title-text">Regional Commodity Benchmark Rates</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted);">Average Modal Price (₹/kg) across all active Tamil Nadu mandis</div>
+      </div>
+    </div>
+  </div>
+  <div class="farm-card-body">
+    <div style="height: 260px; width: 100%;">
+      <canvas id="commodityBenchmarkChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Daily Price History and Recent Searches Table (Requirement 7 & 8) -->
+<div class="farm-card">
+  <div class="farm-card-header">
+    <div class="card-title-group">
+      <div class="card-title-icon">🕒</div>
+      <div>
+        <div class="card-title-text">Recent Farmer Profit Calculations & Searches</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted);">Stored queries and profit optimization records</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="comparison-table" id="recentSearchesTable">
+      <thead>
+        <tr>
+          <th>Query ID</th>
+          <th>Farmer / Location</th>
+          <th>Crop</th>
+          <th>Quantity</th>
+          <th>Base Market</th>
+          <th>Search Date</th>
+          <th>Recommended Mandi Profit</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="recentSearchesBody">
+        <tr>
+          <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+            Loading recent calculations from MySQL...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    loadDashboardMetrics();
+  });
+</script>
+{% endblock %}

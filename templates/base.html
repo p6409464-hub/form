@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Farmer Market Price Assistant | Coimbatore, Tiruppur, Erode{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <!-- Chart.js CDN for interactive visual charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="navbar-farmer">
+    <div class="nav-container">
+      <a href="{{ url_for('index') }}" class="brand-link">
+        <div class="brand-logo-icon">🌾</div>
+        <div>
+          <div class="brand-title">Farmer Market Price Assistant</div>
+          <div class="brand-subtitle">Tamil Nadu Agricultural Mandi Intelligence (Coimbatore • Tiruppur • Erode)</div>
+        </div>
+      </a>
+
+      <nav>
+        <ul class="nav-links">
+          <li>
+            <a href="{{ url_for('index') }}" class="nav-item-link {% if request.endpoint == 'index' %}active{% endif %}">
+              <span>🌾</span> Price & Profit Assistant
+            </a>
+          </li>
+          <li>
+            <a href="{{ url_for('prices') }}" class="nav-item-link {% if request.endpoint == 'prices' %}active{% endif %}">
+              <span>📊</span> Mandi Prices
+            </a>
+          </li>
+          <li>
+            <a href="{{ url_for('dashboard') }}" class="nav-item-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+              <span>📈</span> Analytics Dashboard
+            </a>
+          </li>
+          <li>
+            <a href="{{ url_for('settings') }}" class="nav-item-link {% if request.endpoint == 'settings' %}active{% endif %}">
+              <span>⚙️</span> API & Settings
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <div class="api-status-badge" title="Agmarknet official government data connection status">
+          <span class="pulse-dot"></span>
+          <span>AGMARKNET Official Feed</span>
+        </div>
+        <button type="button" class="btn btn-sync" id="openSyncModalBtn" onclick="openSyncModal()">
+          🔄 Sync API
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Flash Messages Banner -->
+  <main class="main-wrapper">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div style="margin-bottom: 1.25rem;">
+          {% for category, message in messages %}
+            <div class="alert-banner alert-{{ category if category != 'error' else 'danger' }}">
+              <span>{{ message }}</span>
+              <button type="button" onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;font-weight:bold;">✕</button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Sync Modal -->
+  <div class="modal-overlay" id="syncModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 style="font-weight: 700; color: var(--primary-dark); font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span>🔄</span> Synchronize with AGMARKNET API
+        </h3>
+        <button type="button" onclick="closeSyncModal()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text-muted);">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.5;">
+          Fetch live daily agricultural market prices directly from the official Government of India Open Government Data (OGD) platform (<strong>data.gov.in</strong>).
+        </p>
+
+        <div class="form-group">
+          <label class="form-label">data.gov.in API Key (Optional Override):</label>
+          <input type="password" id="modalApiKeyInput" class="form-control" placeholder="Enter API key or leave blank to use configured key">
+          <div class="input-hint">If left empty, uses the API key saved in system settings or .env.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Filter by District (Optional):</label>
+          <select id="modalDistrictFilter" class="form-control form-select">
+            <option value="">All 3 Districts (Coimbatore, Tiruppur, Erode)</option>
+            <option value="Coimbatore">Coimbatore</option>
+            <option value="Tiruppur">Tiruppur</option>
+            <option value="Erode">Erode</option>
+          </select>
+        </div>
+
+        <div id="syncResultStatus" style="display: none; margin-top: 1rem; padding: 0.85rem; border-radius: var(--radius-sm); font-size: 0.85rem;"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary-farm" onclick="closeSyncModal()">Cancel</button>
+        <button type="button" class="btn btn-primary-farm" style="width: auto;" id="executeSyncBtn" onclick="runAgmarknetSync()">
+          <span>🔄</span> Start Sync Now
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Footer -->
+  <footer class="farmer-footer">
+    <div class="footer-inner">
+      <div>
+        <p><strong>Farmer Market Price Assistant</strong> — Empowering Tamil Nadu Farmers with Real Market Data.</p>
+        <p style="font-size: 0.78rem; margin-top: 0.25rem;">
+          Data sourced from <strong>Agmarknet</strong> & <strong>Open Government Data (OGD) Platform India (data.gov.in)</strong>.
+        </p>
+      </div>
+      <div class="footer-badges">
+        <span class="badge badge-coimbatore">Coimbatore Mandis: 4</span>
+        <span class="badge badge-tiruppur">Tiruppur Mandis: 4</span>
+        <span class="badge badge-erode">Erode Mandis: 5</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

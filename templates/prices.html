@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}Live Mandi Prices Explorer | Coimbatore, Tiruppur, Erode{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="page-hero-content">
+    <h1>📊 Tamil Nadu Mandi Prices Explorer</h1>
+    <p>
+      Browse real-world agricultural prices across all 13 mandis in Coimbatore, Tiruppur, and Erode. 
+      Prices are directly converted from official Agmarknet Quintal rates to per-kilogram retail/wholesale equivalents.
+    </p>
+  </div>
+  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+    <button type="button" class="btn btn-secondary-farm" onclick="exportPricesCSV()">
+      📥 Export to CSV
+    </button>
+    <button type="button" class="btn btn-primary-farm" style="width: auto;" onclick="openSyncModal()">
+      🔄 Sync Agmarknet API
+    </button>
+  </div>
+</section>
+
+<!-- Filter Toolbar Card -->
+<div class="farm-card" style="margin-bottom: 1.25rem;">
+  <div class="farm-card-body" style="padding: 1.1rem 1.4rem;">
+    <form id="pricesFilterForm" onsubmit="applyPricesFilter(event)" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; align-items: end;">
+      
+      <!-- District Filter -->
+      <div>
+        <label class="form-label" for="filterDistrict">District:</label>
+        <select id="filterDistrict" class="form-control form-select" onchange="applyPricesFilter()">
+          <option value="">All Districts</option>
+          <option value="Coimbatore">Coimbatore</option>
+          <option value="Tiruppur">Tiruppur</option>
+          <option value="Erode">Erode</option>
+        </select>
+      </div>
+
+      <!-- Market Filter -->
+      <div>
+        <label class="form-label" for="filterMarket">Market (Mandi):</label>
+        <select id="filterMarket" class="form-control form-select" onchange="applyPricesFilter()">
+          <option value="">All 13 Markets</option>
+          {% for m in markets %}
+            <option value="{{ m.market_name }}">{{ m.market_name }} ({{ m.district_name }})</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Commodity Filter -->
+      <div>
+        <label class="form-label" for="filterCrop">Crop / Commodity:</label>
+        <select id="filterCrop" class="form-control form-select" onchange="applyPricesFilter()">
+          <option value="">All Commodities</option>
+          {% for c in crops %}
+            <option value="{{ c.name }}">{{ c.name }} {% if c.tamil_name %}({{ c.tamil_name }}){% endif %}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Date Filter -->
+      <div>
+        <label class="form-label" for="filterDate">Arrival Date:</label>
+        <input type="date" id="filterDate" class="form-control" onchange="applyPricesFilter()">
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display: flex; gap: 0.5rem;">
+        <button type="submit" class="btn btn-primary-farm" style="padding: 0.65rem 1rem;">
+          Filter
+        </button>
+        <button type="button" class="btn btn-secondary-farm" style="padding: 0.65rem 1rem;" onclick="resetPricesFilter()">
+          Reset
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<!-- Price Results Table Card -->
+<div class="farm-card">
+  <div class="farm-card-header">
+    <div class="card-title-group">
+      <div class="card-title-icon">🏛️</div>
+      <div>
+        <div class="card-title-text">Official AGMARKNET Daily Prices</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted);" id="pricesCountStatus">
+          Showing daily arrivals from Tamil Nadu regulated markets
+        </div>
+      </div>
+    </div>
+    <div>
+      <span class="badge badge-recommended" id="activeFilterBadge">All Mandis</span>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="comparison-table" id="allPricesTable">
+      <thead>
+        <tr>
+          <th>Commodity (Crop)</th>
+          <th>Variety</th>
+          <th>Market (Mandi)</th>
+          <th>District</th>
+          <th>Arrival Date</th>
+          <th>Min Price (₹/Qtl)</th>
+          <th>Max Price (₹/Qtl)</th>
+          <th>Modal Price (₹/Qtl)</th>
+          <th>Converted (₹/kg)</th>
+          <th>Source / Status</th>
+        </tr>
+      </thead>
+      <tbody id="allPricesTableBody">
+        <tr>
+          <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+            Loading official prices...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let cachedPrices = [];
+
+  async function loadMandiPrices(params = {}) {
+    const tbody = document.getElementById("allPricesTableBody");
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; padding: 2rem;">Loading prices...</td></tr>`;
+
+    const urlParams = new URLSearchParams(params);
+    try {
+      const res = await fetch(`/api/mandi-prices?${urlParams.toString()}`);
+      const data = await res.json();
+      
+      if (!data.success || !data.data || data.data.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="10" style="text-align: center; color: #b91c1c; padding: 2.5rem;">
+              ⚠️ No official price records found for this filter combination.
+              <br><small style="color: var(--text-muted);">Try selecting another date or click 'Sync Agmarknet API' to pull live data.</small>
+            </td>
+          </tr>
+        `;
+        document.getElementById("pricesCountStatus").innerText = `0 records found.`;
+        return;
+      }
+
+      cachedPrices = data.data;
+      document.getElementById("pricesCountStatus").innerText = `Showing ${data.data.length} official mandi records.`;
+
+      let html = "";
+      data.data.forEach(item => {
+        const distClass = item.district_name.toLowerCase() === "coimbatore" ? "badge-coimbatore" :
+                          item.district_name.toLowerCase() === "tiruppur" ? "badge-tiruppur" : "badge-erode";
+
+        html += `
+          <tr>
+            <td><strong>${item.crop_name}</strong></td>
+            <td><span style="color: var(--text-muted); font-size: 0.82rem;">${item.variety || 'Standard'}</span></td>
+            <td><strong>${item.market_name}</strong></td>
+            <td><span class="badge ${distClass}">${item.district_name}</span></td>
+            <td><code>${item.arrival_date}</code></td>
+            <td>₹${Number(item.min_price).toLocaleString()}</td>
+            <td>₹${Number(item.max_price).toLocaleString()}</td>
+            <td><strong style="color: var(--primary-green); font-size: 0.98rem;">₹${Number(item.modal_price).toLocaleString()}</strong></td>
+            <td><strong style="color: var(--primary-dark); background: #dcfce7; padding: 2px 6px; border-radius: 4px;">₹${Number(item.modal_price_kg).toFixed(2)}/kg</strong></td>
+            <td><span class="badge badge-source">${item.source}</span></td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:#b91c1c;">Error loading prices: ${err.message}</td></tr>`;
+    }
+  }
+
+  function applyPricesFilter(e) {
+    if (e) e.preventDefault();
+    const district = document.getElementById("filterDistrict").value;
+    const market = document.getElementById("filterMarket").value;
+    const crop = document.getElementById("filterCrop").value;
+    const dateVal = document.getElementById("filterDate").value;
+
+    const params = {};
+    if (district) params.district = district;
+    if (market) params.market = market;
+    if (crop) params.crop = crop;
+    if (dateVal) params.start_date = dateVal;
+
+    loadMandiPrices(params);
+  }
+
+  function resetPricesFilter() {
+    document.getElementById("filterDistrict").value = "";
+    document.getElementById("filterMarket").value = "";
+    document.getElementById("filterCrop").value = "";
+    document.getElementById("filterDate").value = "";
+    loadMandiPrices();
+  }
+
+  function exportPricesCSV() {
+    if (!cachedPrices || cachedPrices.length === 0) {
+      alert("No records to export.");
+      return;
+    }
+    let csv = "Crop,Variety,Market,District,Arrival Date,Min Price (Rs/Qtl),Max Price (Rs/Qtl),Modal Price (Rs/Qtl),Price per kg (Rs),Source\n";
+    cachedPrices.forEach(p => {
+      csv += `"${p.crop_name}","${p.variety || ''}","${p.market_name}","${p.district_name}","${p.arrival_date}",${p.min_price},${p.max_price},${p.modal_price},${p.modal_price_kg},"${p.source}"\n`;
+    });
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `TamilNadu_Agmarknet_Prices_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    loadMandiPrices();
+  });
+</script>
+{% endblock %}
